@@ -8,7 +8,7 @@ from datetime import datetime
 from controllers.sales_controller import SalesController
 from controllers.product_controller import ProductController
 from utils.helpers import format_currency, validate_positive_number, validate_positive_integer
-
+from views.view_helpers import clear_tree
 
 class SalesView:
     """View for managing sales"""
@@ -69,9 +69,8 @@ class SalesView:
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
     
     def load_sales(self):
-        """Load all sales"""
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        """Load all sales."""
+        clear_tree(self.tree)
         
         sales = self.controller.get_all_sales()
         for sale in sales:

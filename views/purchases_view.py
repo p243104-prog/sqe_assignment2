@@ -8,7 +8,7 @@ from datetime import datetime
 from controllers.purchase_controller import PurchaseController
 from controllers.product_controller import ProductController
 from utils.helpers import format_currency, validate_positive_number, validate_positive_integer
-
+from views.view_helpers import clear_tree
 
 class PurchasesView:
     """View for managing purchases"""
