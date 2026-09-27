@@ -15,7 +15,7 @@ def start_application():
         """Callback when login is successful"""
         # Create new root for main window
         main_root = tk.Tk()
-        MainWindow(main_root, auth_controller)
+        MainWindow(main_root, auth_controller, start_application)
         main_root.mainloop()
     
     # Show login window

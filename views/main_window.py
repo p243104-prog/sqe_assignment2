@@ -16,9 +16,11 @@ from views.reports_view import ReportsView
 class MainWindow:
     """Main application window with navigation"""
     
-    def __init__(self, root, auth_controller):
+    def __init__(self, root, auth_controller, restart_callback):
+        self.restart_callback = restart_callback
         self.root = root
         self.auth_controller = auth_controller
+        self.restart_callback = restart_callback
         self.current_view = None
         
         # Configure root window
@@ -158,12 +160,9 @@ class MainWindow:
     def logout(self):
         """Logout and return to login screen"""
         if messagebox.askyesno("Logout", "Are you sure you want to logout?"):
-            self.auth_controller.logout()
-            self.root.destroy()
-            
-            # Restart application with login screen
-            from main import start_application
-            start_application()
+           self.auth_controller.logout()
+           self.root.destroy()
+           self.restart_callback()
     
     def show_about(self):
         """Show about dialog"""
