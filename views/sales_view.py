@@ -9,6 +9,7 @@ from controllers.sales_controller import SalesController
 from controllers.product_controller import ProductController
 from utils.helpers import format_currency, validate_positive_number, validate_positive_integer
 from views.view_helpers import clear_tree
+from views.transaction_dialog import TransactionDialog
 
 class SalesView:
     """View for managing sales"""
@@ -102,21 +103,28 @@ class SalesView:
         self.load_sales()
 
 
-class SaleDialog:
+class SaleDialog(TransactionDialog):
     """Dialog for adding sales"""
     
-    def __init__(self, parent, controller, product_controller, auth_controller, callback=None):
-        self.controller = controller
-        self.product_controller = product_controller
-        self.auth_controller = auth_controller
-        self.callback = callback
-        
-        self.dialog = tk.Toplevel(parent)
+    def __init__(
+        self,
+        parent,
+        controller,
+        product_controller,
+        auth_controller,
+        callback=None
+):
+        super().__init__(
+            parent,
+            controller,
+            product_controller,
+            auth_controller,
+            callback
+    )
+
         self.dialog.title("New Sale")
         self.dialog.geometry("500x400")
-        self.dialog.transient(parent)
-        self.dialog.grab_set()
-        
+
         self.create_widgets()
     
     def create_widgets(self):
@@ -126,67 +134,18 @@ class SaleDialog:
         
         # Product
         ttk.Label(main_frame, text="Product:*").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.product_var = tk.StringVar()
-        products = self.product_controller.get_all_products()
-        product_values = [f"{p['product_id']} - {p['product_name']} (Stock: {p['quantity_in_stock']})" 
-                         for p in products]
-        self.product_combo = ttk.Combobox(main_frame, textvariable=self.product_var,
-                                          values=product_values, width=45, state='readonly')
-        self.product_combo.grid(row=0, column=1, pady=5)
-        if product_values:
-            self.product_combo.current(0)
-        self.product_combo.bind('<<ComboboxSelected>>', self.on_product_selected)
-        
-        # Quantity
-        ttk.Label(main_frame, text="Quantity:*").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.quantity_var = tk.StringVar(value="1")
-        ttk.Entry(main_frame, textvariable=self.quantity_var, width=47).grid(row=1, column=1, pady=5)
-        
-        # Unit price
-        ttk.Label(main_frame, text="Unit Price:*").grid(row=2, column=0, sticky=tk.W, pady=5)
-        self.price_var = tk.StringVar(value="0.00")
-        ttk.Entry(main_frame, textvariable=self.price_var, width=47).grid(row=2, column=1, pady=5)
-        
-        # Total (calculated)
-        ttk.Label(main_frame, text="Total:").grid(row=3, column=0, sticky=tk.W, pady=5)
-        self.total_label = ttk.Label(main_frame, text="$0.00", font=('Arial', 12, 'bold'))
-        self.total_label.grid(row=3, column=1, sticky=tk.W, pady=5)
-        
-        # Customer name
-        ttk.Label(main_frame, text="Customer Name:").grid(row=4, column=0, sticky=tk.W, pady=5)
-        self.customer_var = tk.StringVar()
-        ttk.Entry(main_frame, textvariable=self.customer_var, width=47).grid(row=4, column=1, pady=5)
-        
-        # Notes
-        ttk.Label(main_frame, text="Notes:").grid(row=5, column=0, sticky=tk.NW, pady=5)
-        self.notes_text = tk.Text(main_frame, width=35, height=4)
-        self.notes_text.grid(row=5, column=1, pady=5)
-        
-        # Bind changes to calculate total
-        self.quantity_var.trace('w', self.calculate_total)
-        self.price_var.trace('w', self.calculate_total)
-        
-        # Buttons
-        btn_frame = ttk.Frame(main_frame)
-        btn_frame.grid(row=6, column=0, columnspan=2, pady=20)
-        
-        ttk.Button(btn_frame, text="Complete Sale", command=self.save).pack(side=tk.LEFT, padx=5)
-        ttk.Button(btn_frame, text="Cancel", command=self.dialog.destroy).pack(side=tk.LEFT, padx=5)
-        
-        # Load initial product price
-        self.on_product_selected()
+        self.setup_product_combo(
+            main_frame,
+            include_stock=True
+)
     
     def on_product_selected(self, event=None):
-        """Update price when product is selected"""
-        product_str = self.product_var.get()
-        if not product_str:
-            return
-        
-        product_id = int(product_str.split(' - ')[0])
-        product = self.product_controller.get_product(product_id)
-        
+        """Update price when product is selected."""
+
+        product = self.get_selected_product()
+
         if product:
-            self.price_var.set(str(product['unit_price']))
+           self.price_var.set(str(product['unit_price']))
     
     def calculate_total(self, *args):
         """Calculate and display total"""
@@ -229,10 +188,8 @@ class SaleDialog:
             product_id, quantity, price, user_id, customer_name, notes
         )
         
-        if success:
-            messagebox.showinfo("Success", "Sale completed successfully")
-            self.dialog.destroy()
-            if self.callback:
-                self.callback()
-        else:
-            messagebox.showerror("Error", result)
+        self.finish_save(
+             success,
+             result,
+             "Sale completed successfully"
+)

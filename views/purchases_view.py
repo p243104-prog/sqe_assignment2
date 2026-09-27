@@ -9,21 +9,31 @@ from controllers.purchase_controller import PurchaseController
 from controllers.product_controller import ProductController
 from utils.helpers import format_currency, validate_positive_number, validate_positive_integer
 from views.view_helpers import clear_tree
+from views.transaction_dialog import TransactionDialog
 
-class PurchasesView:
+class PurchaseDialog(TransactionDialog):
     """View for managing purchases"""
     
-    def __init__(self, parent, auth_controller):
-        self.parent = parent
-        self.auth_controller = auth_controller
-        self.controller = PurchaseController()
-        self.product_controller = ProductController()
-        
-        self.frame = ttk.Frame(parent, padding="10")
-        self.frame.pack(fill=tk.BOTH, expand=True)
-        
-        self.create_widgets()
-        self.load_purchases()
+    def __init__(
+        self,
+        parent,
+        controller,
+        product_controller,
+        auth_controller,
+        callback=None
+):
+       super().__init__(
+           parent,
+           controller,
+           product_controller,
+           auth_controller,
+           callback
+    )
+
+       self.dialog.title("New Purchase")
+       self.dialog.geometry("500x450")
+
+       self.create_widgets()
     
     def create_widgets(self):
         """Create purchases view widgets"""
